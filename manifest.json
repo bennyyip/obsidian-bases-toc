@@ -1,0 +1,10 @@
+{
+	"id": "bases-toc",
+	"name": "Bases TOC",
+	"version": "1.0.0",
+	"minAppVersion": "1.10.0",
+	"description": "TOC",
+	"author": "Ben Yip",
+	"authorUrl": "https://github.com/bennyyip",
+	"isDesktopOnly": false
+}
