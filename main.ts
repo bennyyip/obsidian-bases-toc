@@ -6,7 +6,7 @@ export default class ObsidianTocsPlugin extends Plugin {
 		this.registerBasesView('toc', {
 			name: 'TOC',
 			icon: 'lucide-table-of-contents',
-			factory: (controller, containerEl) => new TocView(controller, containerEl, this.app),
+			factory: (controller, containerEl) => new TocView(controller, containerEl),
 			options: TocView.getViewOptions,
 		});
 	}
