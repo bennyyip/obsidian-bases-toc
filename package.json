@@ -1,6 +1,6 @@
 {
 	"name": "bases-toc",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "TOC",
 	"main": "main.js",
 	"scripts": {
