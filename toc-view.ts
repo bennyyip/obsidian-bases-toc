@@ -1,5 +1,6 @@
 import {
     App,
+    setIcon,
     BasesView,
     QueryController,
     ViewOption,
@@ -7,6 +8,31 @@ import {
 
 const DEFAULT_HEADING_MAX_LEVEL = 6
 const DEFAULT_HEADING_BLACKLIST = ['toc', 'table_of_contents']
+
+const createUl = (el: HTMLElement) => {
+    const ul = el.createEl('ul')
+    return ul
+}
+
+const createCollapseIndicator = (el: HTMLElement) => {
+    const indicator = el.createSpan({
+        cls: 'base-toc-collapse-indicator collapse-indicator collapse-icon',
+        prepend: true
+    })
+    setIcon(indicator, 'right-triangle')
+
+    indicator.addEventListener('click', () => {
+        const collapsed = indicator.hasClass('collapsed')
+        indicator.toggleClass('collapsed', !collapsed)
+        console.log(`indicator.parent: `, indicator.parentElement)
+        indicator.parentElement?.querySelectorAll(':scope > ul').forEach(
+            (x) => { x.toggleClass('collapsed', !collapsed) }
+        )
+    })
+
+
+    return indicator
+}
 
 export class TocView extends BasesView {
     type = 'toc'
@@ -22,7 +48,7 @@ export class TocView extends BasesView {
         super(controller)
         this.scrollEl = scrollEl
         this.containerEl = scrollEl.createDiv({ cls: 'bases-toc-container is-loading', attr: { tabIndex: 0 } })
-        this.tocEl = this.containerEl.createDiv('ul')
+        this.tocEl = this.containerEl.createDiv('base-toc-content')
     }
 
     public onDataUpdated(): void {
@@ -30,13 +56,18 @@ export class TocView extends BasesView {
         this.loadConfig()
 
         this.tocEl.remove()
-        this.tocEl = this.containerEl.createDiv('ul')
-        let ul = this.tocEl
+        this.tocEl = this.containerEl.createDiv('base-toc-content')
+        const rootul = createUl(this.tocEl)
+        let ul = rootul
         for (const group of this.data.groupedData) {
             if (group.hasKey()) {
-                // if (group.entries == 1 && group.entries[0].file.path = this.file.path)
-                this.tocEl.createEl('span', { text: group.key?.toString() })
-                ul = this.tocEl.createEl('ul')
+                const groupDiv = rootul.createDiv('base-toc-group')
+                groupDiv.createEl('span', { text: group.key?.toString() })
+                ul = createUl(groupDiv)
+                ul.addClasses(['base-toc-group-ul', 'is-collapsible'])
+
+                const indicator = createCollapseIndicator(groupDiv)
+
             }
 
             for (const entry of group.entries) {
@@ -46,10 +77,13 @@ export class TocView extends BasesView {
                     text: entry.file.basename,
                     href: entry.file.path,
                 }).addClasses(['internal-link', 'bases-toc-file'])
+                createCollapseIndicator(li)
 
-
-                if (this.headingMaxLevel > 0)
-                    this.createHeadings(entry.file.path, li.createEl('ul'))
+                if (this.headingMaxLevel > 0) {
+                    const ul = createUl(li)
+                    ul.addClasses(['base-toc-headings-ul', 'is-collapsible'])
+                    this.createHeadings(entry.file.path, ul)
+                }
 
             }
         }
@@ -88,6 +122,7 @@ export class TocView extends BasesView {
 
             if (level > prevLevel) {
                 level2ul[level] = level2ul[prevLevel].createEl('ul')
+                level2ul[level].addClass('is-collapsible')
             }
 
             level2ul[level].createEl('li').createEl('a', {

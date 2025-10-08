@@ -1,3 +1,12 @@
 .bases-toc-file {
-	font-size: 1.2em;
+    font-size: 1.2em;
+}
+
+ul.base-toc-group-ul.collapsed,
+ul.base-toc-headings-ul.collapsed {
+    display: none;
+}
+
+.base-toc-collapse-indicator {
+    display: inline
 }

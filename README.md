@@ -17,7 +17,7 @@ List files in the same directory, recursively:
 ```yaml
 filters:
   and:
-    - file.folder.startsWith(this.file.folder)
+    - file.inFolder(this.file.folder)
     - file.path != this.file.path
     - file.ext == "md"
 views:
