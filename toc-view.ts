@@ -84,7 +84,6 @@ export class TocView extends BasesView {
                     ul.addClasses(['base-toc-headings-ul', 'is-collapsible'])
                     this.createHeadings(entry.file.path, ul)
                 }
-
             }
         }
     }
@@ -136,8 +135,36 @@ export class TocView extends BasesView {
     }
 
     private loadConfig(): void {
-        this.headingMaxLevel = this.config.get('headingMaxLevel') as number
-        this.headingBlacklist = new Set(this.config.get('headingBlacklist') as string[])
+        this.headingMaxLevel = this.getNumericConfig('headingMaxLevel', DEFAULT_HEADING_MAX_LEVEL, 0, 6)
+        this.headingBlacklist = new Set(this.getArrayConfig('headingBlacklist', DEFAULT_HEADING_BLACKLIST))
+    }
+
+
+    private getNumericConfig(key: string, defaultValue: number, min?: number, max?: number): number {
+        const value = this.config.get(key)
+        if (value == null || typeof value !== 'number') return defaultValue
+
+        let result = value
+        if (min !== undefined) result = Math.max(min, result)
+        if (max !== undefined) result = Math.min(max, result)
+        return result
+    }
+
+    private getArrayConfig(key: string, defaultValue: string[]): string[] {
+        const value = this.config.get(key)
+        if (value == null) return defaultValue
+
+        // Handle array values
+        if (Array.isArray(value)) {
+            return value.filter(item => typeof item === 'string' && item.trim().length > 0)
+        }
+
+        // Handle single string value
+        if (typeof value === 'string' && value.trim().length > 0) {
+            return [value.trim()]
+        }
+
+        return defaultValue
     }
 
     static getViewOptions(): ViewOption[] {

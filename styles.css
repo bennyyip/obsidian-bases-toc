@@ -10,3 +10,6 @@ ul.base-toc-headings-ul.collapsed {
 .base-toc-collapse-indicator {
     display: inline
 }
+.markdown-preview-view .base-toc-collapse-indicator {
+  margin-left: -1.5rem;
+}
