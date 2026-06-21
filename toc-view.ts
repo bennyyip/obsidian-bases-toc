@@ -1,7 +1,6 @@
 import {
   MarkdownRenderer,
-  Component,
-  setIcon,
+  // setIcon,
   BasesView,
   QueryController,
   BasesAllOptions,
@@ -10,29 +9,24 @@ import {
 const DEFAULT_HEADING_MAX_LEVEL = 6;
 const DEFAULT_HEADING_BLACKLIST = ["toc", "table_of_contents"];
 
-const createUl = (el: HTMLElement) => {
-  const ul = el.createEl("ul");
-  return ul;
-};
+// const createCollapseIndicator = (el: HTMLElement) => {
+//   const indicator = el.createSpan({
+//     cls: "base-toc-collapse-indicator collapse-indicator collapse-icon",
+//     prepend: true,
+//   });
+//   setIcon(indicator, "right-triangle");
 
-const createCollapseIndicator = (el: HTMLElement) => {
-  const indicator = el.createSpan({
-    cls: "base-toc-collapse-indicator collapse-indicator collapse-icon",
-    prepend: true,
-  });
-  setIcon(indicator, "right-triangle");
+//   indicator.addEventListener("click", () => {
+//     const collapsed = indicator.hasClass("collapsed");
+//     indicator.toggleClass("collapsed", !collapsed);
+//     console.log(`indicator.parent: `, indicator.parentElement);
+//     indicator.parentElement?.querySelectorAll(":scope > ul").forEach((x) => {
+//       x.toggleClass("collapsed", !collapsed);
+//     });
+//   });
 
-  indicator.addEventListener("click", () => {
-    const collapsed = indicator.hasClass("collapsed");
-    indicator.toggleClass("collapsed", !collapsed);
-    console.log(`indicator.parent: `, indicator.parentElement);
-    indicator.parentElement?.querySelectorAll(":scope > ul").forEach((x) => {
-      x.toggleClass("collapsed", !collapsed);
-    });
-  });
-
-  return indicator;
-};
+//   return indicator;
+// };
 
 export class TocView extends BasesView {
   type = "toc";
@@ -53,70 +47,51 @@ export class TocView extends BasesView {
     this.tocEl = this.containerEl.createDiv("base-toc-content");
   }
 
-  public onDataUpdated(): void {
+  public onDataUpdated() {
     this.containerEl.removeClass("is-loading");
     this.loadConfig();
 
     this.tocEl.remove();
     this.tocEl = this.containerEl.createDiv("base-toc-content");
-    const rootul = createUl(this.tocEl);
-    let ul = rootul;
+
+    const markdown = [];
+
     for (const group of this.data.groupedData) {
-      if (group.hasKey()) {
-        const groupDiv = rootul.createDiv("base-toc-group");
-        groupDiv.createEl("span", { text: group.key?.toString() });
-        ul = createUl(groupDiv);
-        ul.addClasses(["base-toc-group-ul", "is-collapsible"]);
-
-        createCollapseIndicator(groupDiv);
-      }
-
       for (const entry of group.entries) {
-        const li = ul.createEl("li");
-
-        // <span data-href="0002 Notes/Programming/CPP/BSD Linked List.md" class="internal-link bases-toc-file">BSD Linked List</span>
-        // <span class="internal-link" data-href="0002 Notes/Programming/CPP/BSD Linked List.md" draggable="true">BSD Linked List</span>
-        li.createEl("a", {
-          text: entry.file.basename,
-          href: entry.file.path,
-          attr: {
-            "data-href": entry.file.path,
-          },
-        }).addClasses(["internal-link", "bases-toc-file"]);
-        createCollapseIndicator(li);
-
-        // MarkdownRenderer.render(
-        //   this.app,
-        //   `- [[${entry.file.path}|${entry.file.basename}]]`,
-        //   this.tocEl,
-        //   "",
-        //   this,
-        // );
+        markdown.push([`- [[${entry.file.path}|${entry.file.basename}]]`]);
 
         if (this.headingMaxLevel > 0) {
-          const ul = createUl(li);
-          ul.addClasses(["base-toc-headings-ul", "is-collapsible"]);
-          this.createHeadings(entry.file.path, ul);
+          markdown.push(...this.createHeadings(entry.file.path));
         }
       }
     }
-    this.tocEl.querySelectorAll("a.internal-link").forEach((link) => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        const href = link.getAttribute("data-href");
-        if (href) {
-          this.app.workspace.openLinkText(href, "", false);
-        }
+    void MarkdownRenderer.render(
+      this.app,
+      markdown.filter(Boolean).join("\n"),
+      this.tocEl,
+      "",
+      this,
+    ).then(() => {
+      this.tocEl.querySelectorAll("a.internal-link").forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const href = link.getAttribute("data-href");
+          if (href) {
+            void this.app.workspace.openLinkText(href, "", false);
+          }
+        });
       });
     });
   }
 
-  private createHeadings(filepath: string, ul: HTMLUListElement) {
+  private createHeadings(filepath: string): string[] {
+    let res: string[] = [];
+
     const cache = this.app.metadataCache.getCache(filepath);
-    if (!cache) return;
+    if (!cache) return res;
 
     let headings = cache.headings;
-    if (!headings) return;
+    if (!headings) return res;
 
     headings = headings
       .filter((h) => h.level <= this.headingMaxLevel)
@@ -126,36 +101,23 @@ export class TocView extends BasesView {
       });
 
     const minLevel = Math.min(...headings.map((h) => h.level));
-    let level2ul = {
-      [minLevel]: ul,
-    };
-    let prevLevel = minLevel;
 
     headings.forEach((h) => {
       const level = h.level;
       const text = h.heading.split("#")[0];
-      let file_head = h.heading;
 
+      // let file_head = h.heading;
       // remove backticks and tag symbols
-      file_head = file_head.replace(/`/g, "");
-      file_head = file_head.replace(/#/g, "");
+      // file_head = file_head.replace(/`/g, "");
+      // file_head = file_head.replace(/#/g, "");
 
       const link = filepath + "#" + text;
 
-      if (level > prevLevel) {
-        level2ul[level] = level2ul[prevLevel]!.createEl("ul");
-        level2ul[level].addClass("is-collapsible");
-      }
+      const indent = "\t".repeat(level - minLevel + 1);
 
-      level2ul[level]!.createEl("li")
-        .createEl("a", {
-          text: text,
-          href: link,
-        })
-        .addClass("internal-link");
-
-      prevLevel = level;
+      res.push(`${indent}1. [[${link}|${text}]]`);
     });
+    return res;
   }
 
   private loadConfig(): void {
@@ -193,7 +155,7 @@ export class TocView extends BasesView {
     if (Array.isArray(value)) {
       return value.filter(
         (item) => typeof item === "string" && item.trim().length > 0,
-      );
+      ) as string[];
     }
 
     // Handle single string value
@@ -204,7 +166,7 @@ export class TocView extends BasesView {
     return defaultValue;
   }
 
-  static getViewOptions(): BasesAllOptions[] {
+  static getViewOptions(this: void): BasesAllOptions[] {
     return [
       {
         type: "slider",

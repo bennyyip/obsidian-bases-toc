@@ -1,15 +1,15 @@
 .bases-toc-file {
-    font-size: 1.2em;
+  font-size: 1.2em;
 }
 
-ul.base-toc-group-ul.collapsed,
-ul.base-toc-headings-ul.collapsed {
-    display: none;
-}
 
-.base-toc-collapse-indicator {
-    display: inline
-}
-.markdown-preview-view .base-toc-collapse-indicator {
-  margin-left: -1.5rem;
-}
+/* .base-toc-group ul.collapsed{ */
+/*   display: none; */
+/* } */
+
+/* .base-toc-collapse-indicator { */
+/*   display: inline; */
+/* } */
+/* .markdown-preview-view .base-toc-collapse-indicator { */
+/*   margin-left: -1.5rem; */
+/* } */
