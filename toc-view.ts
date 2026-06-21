@@ -4,10 +4,10 @@ import {
   BasesView,
   QueryController,
   BasesAllOptions,
-} from "obsidian";
+} from "obsidian"
 
-const DEFAULT_HEADING_MAX_LEVEL = 6;
-const DEFAULT_HEADING_BLACKLIST = ["toc", "table_of_contents"];
+const DEFAULT_HEADING_MAX_LEVEL = 6
+const DEFAULT_HEADING_BLACKLIST = ["toc", "table_of_contents"]
 
 // const createCollapseIndicator = (el: HTMLElement) => {
 //   const indicator = el.createSpan({
@@ -29,39 +29,39 @@ const DEFAULT_HEADING_BLACKLIST = ["toc", "table_of_contents"];
 // };
 
 export class TocView extends BasesView {
-  type = "toc";
-  scrollEl: HTMLElement;
-  containerEl: HTMLElement;
-  tocEl: HTMLElement;
+  type = "toc"
+  scrollEl: HTMLElement
+  containerEl: HTMLElement
+  tocEl: HTMLElement
 
-  headingMaxLevel: number = DEFAULT_HEADING_MAX_LEVEL;
-  headingBlacklist: Set<string> = new Set(DEFAULT_HEADING_BLACKLIST);
+  headingMaxLevel: number = DEFAULT_HEADING_MAX_LEVEL
+  headingBlacklist: Set<string> = new Set(DEFAULT_HEADING_BLACKLIST)
 
   constructor(controller: QueryController, scrollEl: HTMLElement) {
-    super(controller);
-    this.scrollEl = scrollEl;
+    super(controller)
+    this.scrollEl = scrollEl
     this.containerEl = scrollEl.createDiv({
       cls: "bases-toc-container is-loading",
       attr: { tabIndex: 0 },
-    });
-    this.tocEl = this.containerEl.createDiv("base-toc-content");
+    })
+    this.tocEl = this.containerEl.createDiv("base-toc-content")
   }
 
   public onDataUpdated() {
-    this.containerEl.removeClass("is-loading");
-    this.loadConfig();
+    this.containerEl.removeClass("is-loading")
+    this.loadConfig()
 
-    this.tocEl.remove();
-    this.tocEl = this.containerEl.createDiv("base-toc-content");
+    this.tocEl.remove()
+    this.tocEl = this.containerEl.createDiv("base-toc-content")
 
-    const markdown = [];
+    const markdown = []
 
     for (const group of this.data.groupedData) {
       for (const entry of group.entries) {
-        markdown.push([`- [[${entry.file.path}|${entry.file.basename}]]`]);
+        markdown.push([`- [[${entry.file.path}|${entry.file.basename}]]`])
 
         if (this.headingMaxLevel > 0) {
-          markdown.push(...this.createHeadings(entry.file.path));
+          markdown.push(...this.createHeadings(entry.file.path))
         }
       }
     }
@@ -74,50 +74,50 @@ export class TocView extends BasesView {
     ).then(() => {
       this.tocEl.querySelectorAll("a.internal-link").forEach((link) => {
         link.addEventListener("click", (e) => {
-          e.preventDefault();
-          const href = link.getAttribute("data-href");
+          e.preventDefault()
+          const href = link.getAttribute("data-href")
           if (href) {
-            void this.app.workspace.openLinkText(href, "", false);
+            void this.app.workspace.openLinkText(href, "", false)
           }
-        });
-      });
-    });
+        })
+      })
+    })
   }
 
   private createHeadings(filepath: string): string[] {
-    let res: string[] = [];
+    let res: string[] = []
 
-    const cache = this.app.metadataCache.getCache(filepath);
-    if (!cache) return res;
+    const cache = this.app.metadataCache.getCache(filepath)
+    if (!cache) return res
 
-    let headings = cache.headings;
-    if (!headings) return res;
+    let headings = cache.headings
+    if (!headings) return res
 
     headings = headings
       .filter((h) => h.level <= this.headingMaxLevel)
       .filter((h) => {
-        const text = h.heading.split("#")[0]!.replace(/ /g, "_").toLowerCase();
-        return !this.headingBlacklist.has(text);
-      });
+        const text = h.heading.split("#")[0]!.replace(/ /g, "_").toLowerCase()
+        return !this.headingBlacklist.has(text)
+      })
 
-    const minLevel = Math.min(...headings.map((h) => h.level));
+    const minLevel = Math.min(...headings.map((h) => h.level))
 
     headings.forEach((h) => {
-      const level = h.level;
-      const text = h.heading.split("#")[0];
+      const level = h.level
+      const text = h.heading.split("#")[0]
 
       // let file_head = h.heading;
       // remove backticks and tag symbols
       // file_head = file_head.replace(/`/g, "");
       // file_head = file_head.replace(/#/g, "");
 
-      const link = filepath + "#" + text;
+      const link = filepath + "#" + text
 
-      const indent = "\t".repeat(level - minLevel + 1);
+      const indent = "\t".repeat(level - minLevel + 1)
 
-      res.push(`${indent}1. [[${link}|${text}]]`);
-    });
-    return res;
+      res.push(`${indent}1. [[${link}|${text}]]`)
+    })
+    return res
   }
 
   private loadConfig(): void {
@@ -126,10 +126,10 @@ export class TocView extends BasesView {
       DEFAULT_HEADING_MAX_LEVEL,
       0,
       6,
-    );
+    )
     this.headingBlacklist = new Set(
       this.getArrayConfig("headingBlacklist", DEFAULT_HEADING_BLACKLIST),
-    );
+    )
   }
 
   private getNumericConfig(
@@ -138,32 +138,32 @@ export class TocView extends BasesView {
     min?: number,
     max?: number,
   ): number {
-    const value = this.config.get(key);
-    if (value == null || typeof value !== "number") return defaultValue;
+    const value = this.config.get(key)
+    if (value == null || typeof value !== "number") return defaultValue
 
-    let result = value;
-    if (min !== undefined) result = Math.max(min, result);
-    if (max !== undefined) result = Math.min(max, result);
-    return result;
+    let result = value
+    if (min !== undefined) result = Math.max(min, result)
+    if (max !== undefined) result = Math.min(max, result)
+    return result
   }
 
   private getArrayConfig(key: string, defaultValue: string[]): string[] {
-    const value = this.config.get(key);
-    if (value == null) return defaultValue;
+    const value = this.config.get(key)
+    if (value == null) return defaultValue
 
     // Handle array values
     if (Array.isArray(value)) {
       return value.filter(
         (item) => typeof item === "string" && item.trim().length > 0,
-      ) as string[];
+      ) as string[]
     }
 
     // Handle single string value
     if (typeof value === "string" && value.trim().length > 0) {
-      return [value.trim()];
+      return [value.trim()]
     }
 
-    return defaultValue;
+    return defaultValue
   }
 
   static getViewOptions(this: void): BasesAllOptions[] {
@@ -183,6 +183,6 @@ export class TocView extends BasesView {
         default: DEFAULT_HEADING_BLACKLIST,
         key: "headingBlacklist",
       },
-    ];
+    ]
   }
 }

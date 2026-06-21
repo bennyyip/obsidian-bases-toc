@@ -1,5 +1,5 @@
-import { Plugin } from "obsidian";
-import { TocView } from "./toc-view";
+import { Plugin } from "obsidian"
+import { TocView } from "./toc-view"
 
 export default class ObsidianTocsPlugin extends Plugin {
   async onload() {
@@ -9,7 +9,7 @@ export default class ObsidianTocsPlugin extends Plugin {
       factory: (controller, containerEl) =>
         new TocView(controller, containerEl),
       options: TocView.getViewOptions,
-    });
+    })
   }
 
   onunload() {}
